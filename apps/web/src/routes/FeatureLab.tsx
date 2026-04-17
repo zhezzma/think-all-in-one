@@ -1,4 +1,12 @@
-import type { ApprovalItem, AgentEvent, AssistantConfigDraft } from "../lib/agent";
+import type {
+  ApprovalItem,
+  AgentEvent,
+  AssistantConfigDraft,
+  ControlPlaneAgentProfile,
+  ControlPlaneSessionRecord,
+  ExtensionCatalog,
+  ToolCatalog
+} from "../lib/agent";
 import type { ClientToolEntry } from "../lib/clientTools";
 import { ClientToolsLab } from "./labs/ClientToolsLab";
 import { ExtensionsLab } from "./labs/ExtensionsLab";
@@ -37,6 +45,29 @@ export type FeatureLabProps = {
   onRunAllClientTools: () => void;
   agentHost: string;
   sessionId: string;
+  session: ControlPlaneSessionRecord;
+  sessions: ControlPlaneSessionRecord[];
+  profiles: ControlPlaneAgentProfile[];
+  toolCatalog: ToolCatalog;
+  extensionCatalog: ExtensionCatalog;
+  onRenameSession: (title: string) => Promise<void>;
+  onClearSession: () => Promise<void>;
+  onCreateProfile: (input: {
+    id: string;
+    name: string;
+    description?: string;
+    config?: { model?: string; systemPrompt?: string; enabledTools?: string[]; enabledExtensions?: string[] };
+  }) => Promise<void>;
+  onUpdateProfile: (input: {
+    id: string;
+    name: string;
+    description?: string;
+    config?: { model?: string; systemPrompt?: string; enabledTools?: string[]; enabledExtensions?: string[] };
+  }) => Promise<void>;
+  onDeleteProfile: (id: string) => Promise<void>;
+  onAssignProfile: (profileId?: string) => Promise<void>;
+  onUpdateEnabledTools: (enabledTools: string[]) => Promise<void>;
+  onUpdateEnabledExtensions: (enabledExtensions: string[]) => Promise<void>;
 };
 
 export function FeatureLab(props: FeatureLabProps) {
@@ -81,6 +112,15 @@ function renderLab(props: FeatureLabProps) {
           config={props.config}
           events={props.events}
           sessionId={props.sessionId}
+          session={props.session}
+          sessions={props.sessions}
+          profiles={props.profiles}
+          onRenameSession={props.onRenameSession}
+          onClearSession={props.onClearSession}
+          onCreateProfile={props.onCreateProfile}
+          onUpdateProfile={props.onUpdateProfile}
+          onDeleteProfile={props.onDeleteProfile}
+          onAssignProfile={props.onAssignProfile}
         />
       );
     case "workspace":
@@ -92,7 +132,12 @@ function renderLab(props: FeatureLabProps) {
         />
       );
     case "tools":
-      return <ToolsLab clientTools={props.clientTools} />;
+      return (
+        <ToolsLab
+          toolCatalog={props.toolCatalog}
+          onUpdateEnabledTools={props.onUpdateEnabledTools}
+        />
+      );
     case "client-tools":
       return (
         <ClientToolsLab
@@ -106,7 +151,12 @@ function renderLab(props: FeatureLabProps) {
     case "mcp":
       return <McpLab />;
     case "extensions":
-      return <ExtensionsLab />;
+      return (
+        <ExtensionsLab
+          extensionCatalog={props.extensionCatalog}
+          onUpdateEnabledExtensions={props.onUpdateEnabledExtensions}
+        />
+      );
     default:
       return null;
   }

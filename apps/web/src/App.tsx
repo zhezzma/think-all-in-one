@@ -4,43 +4,49 @@ import { ApprovalsPanel } from "./components/ApprovalsPanel";
 import { ChatShell } from "./components/ChatShell";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { EventLog } from "./components/EventLog";
-import { resolveAgentHost, useAssistantUiState } from "./lib/agent";
+import {
+  resolveAgentHost,
+  useAssistantUiState,
+  useControlPlaneState,
+  type ControlPlaneAgentProfile,
+  type ControlPlaneSessionRecord
+} from "./lib/agent";
 import { useClientToolRegistry } from "./lib/clientTools";
 import { FeatureLab, type FeatureLabRoute, labRoutes } from "./routes/FeatureLab";
 
 const DEFAULT_VIEW = "console" as const;
 const DEFAULT_LAB = labRoutes[0].id;
 const DEFAULT_SESSION_ID = "main";
-const SESSION_STORAGE_KEY = "think-all-in-one.sessions";
 const ACTIVE_SESSION_STORAGE_KEY = "think-all-in-one.active-session";
 
 type ViewMode = typeof DEFAULT_VIEW | "lab";
-type SessionItem = {
+
+type ProfileMutationInput = {
   id: string;
-  title: string;
-  createdAt: string;
+  name: string;
+  description?: string;
+  config?: {
+    model?: string;
+    systemPrompt?: string;
+    enabledTools?: string[];
+    enabledExtensions?: string[];
+  };
 };
 
 export default function App() {
-  const [sessions, setSessions] = useState<SessionItem[]>(readStoredSessions);
+  const controlPlane = useControlPlaneState();
+  const sessions = controlPlane.snapshot?.document.sessions ?? [];
+  const profiles = controlPlane.snapshot?.document.profiles ?? [];
+
   const [activeSessionId, setActiveSessionId] = useState(readStoredActiveSessionId);
   const [view, setView] = useState<ViewMode>(getViewFromHash());
   const [activeLab, setActiveLab] = useState<FeatureLabRoute>(getLabFromHash());
+  const [isMutating, setIsMutating] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
     }
-
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessions));
-  }, [sessions]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
   }, [activeSessionId]);
 
   useEffect(() => {
@@ -53,6 +59,33 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
+  useEffect(() => {
+    if (controlPlane.loading || isMutating || sessions.length > 0) {
+      return;
+    }
+
+    setIsMutating(true);
+    void controlPlane
+      .createSession({ id: DEFAULT_SESSION_ID, title: "Main chat" })
+      .then(() => {
+        setActiveSessionId(DEFAULT_SESSION_ID);
+      })
+      .finally(() => {
+        setIsMutating(false);
+      });
+  }, [controlPlane, isMutating, sessions.length]);
+
+  useEffect(() => {
+    if (sessions.length > 0 && !sessions.some((item) => item.id === activeSessionId)) {
+      setActiveSessionId(sessions[0].id);
+    }
+  }, [activeSessionId, sessions]);
+
+  const activeSession = useMemo(
+    () => sessions.find((item) => item.id === activeSessionId) ?? sessions[0],
+    [activeSessionId, sessions]
+  );
+
   const navigateToConsole = () => {
     window.location.hash = "#console";
   };
@@ -61,23 +94,95 @@ export default function App() {
     window.location.hash = `#lab/${lab}`;
   };
 
-  const activeSession = useMemo(
-    () => sessions.find((item) => item.id === activeSessionId) ?? sessions[0],
-    [activeSessionId, sessions]
-  );
-
-  useEffect(() => {
-    if (!sessions.some((item) => item.id === activeSessionId) && sessions[0]) {
-      setActiveSessionId(sessions[0].id);
+  const runMutation = async (action: () => Promise<unknown>) => {
+    setIsMutating(true);
+    try {
+      await action();
+    } finally {
+      setIsMutating(false);
     }
-  }, [activeSessionId, sessions]);
-
-  const handleCreateSession = () => {
-    const next = createSession();
-    setSessions((current) => [next, ...current]);
-    setActiveSessionId(next.id);
-    navigateToConsole();
   };
+
+  const handleCreateSession = async () => {
+    const next = createSessionRecord();
+    await runMutation(async () => {
+      await controlPlane.createSession(next);
+      setActiveSessionId(next.id);
+      navigateToConsole();
+    });
+  };
+
+  const handleRenameSession = async (title: string) => {
+    if (!activeSession) return;
+
+    await runMutation(async () => {
+      await controlPlane.updateSession({
+        id: activeSession.id,
+        title,
+        profileId: activeSession.profileId
+      });
+    });
+  };
+
+  const handleDeleteSession = async () => {
+    if (!activeSession) return;
+
+    await runMutation(async () => {
+      await controlPlane.deleteSession(activeSession.id);
+    });
+  };
+
+  const handleAssignProfile = async (profileId?: string) => {
+    if (!activeSession) return;
+
+    await runMutation(async () => {
+      await controlPlane.updateSession({
+        id: activeSession.id,
+        title: activeSession.title,
+        profileId
+      });
+    });
+  };
+
+  const handleCreateProfile = async (input: ProfileMutationInput) => {
+    await runMutation(async () => {
+      await controlPlane.createProfile(input);
+    });
+  };
+
+  const handleUpdateProfile = async (input: ProfileMutationInput) => {
+    await runMutation(async () => {
+      await controlPlane.updateProfile(input);
+    });
+  };
+
+  const handleDeleteProfile = async (id: string) => {
+    await runMutation(async () => {
+      await controlPlane.deleteProfile(id);
+    });
+  };
+
+  if (controlPlane.error) {
+    return (
+      <main style={pageStyle}>
+        <section style={statusPanelStyle}>
+          <h1 style={headingStyle}>Control plane unavailable</h1>
+          <p style={subheadingStyle}>{controlPlane.error}</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!activeSession) {
+    return (
+      <main style={pageStyle}>
+        <section style={statusPanelStyle}>
+          <h1 style={headingStyle}>Loading workspace…</h1>
+          <p style={subheadingStyle}>Preparing a durable chat session.</p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main style={pageStyle}>
@@ -86,9 +191,11 @@ export default function App() {
           <div style={sidebarHeaderStyle}>
             <div>
               <h2 style={sidebarTitleStyle}>Chats</h2>
-              <p style={sidebarCopyStyle}>{sessions.length} active session{sessions.length === 1 ? "" : "s"}</p>
+              <p style={sidebarCopyStyle}>
+                {sessions.length} active session{sessions.length === 1 ? "" : "s"}
+              </p>
             </div>
-            <button type="button" style={newChatButtonStyle} onClick={handleCreateSession}>
+            <button type="button" style={newChatButtonStyle} onClick={() => void handleCreateSession()}>
               New chat
             </button>
           </div>
@@ -104,7 +211,7 @@ export default function App() {
                   navigateToConsole();
                 }}
               >
-                <strong style={sessionTitleStyle}>{item.title}</strong>
+                <strong style={sessionTitleStyle}>{item.title || "Untitled chat"}</strong>
                 <span style={sessionMetaStyle}>{item.id}</span>
               </button>
             ))}
@@ -113,16 +220,19 @@ export default function App() {
 
         <SessionWorkspace
           key={activeSessionId}
-          session={activeSession ?? createSession(DEFAULT_SESSION_ID, "Main chat")}
+          session={activeSession}
+          sessions={sessions}
+          profiles={profiles}
           view={view}
           activeLab={activeLab}
           onNavigateConsole={navigateToConsole}
           onNavigateLab={navigateToLab}
-          onRenameSession={(title) => {
-            setSessions((current) =>
-              current.map((item) => (item.id === activeSessionId ? { ...item, title } : item))
-            );
-          }}
+          onRenameSession={handleRenameSession}
+          onDeleteSession={handleDeleteSession}
+          onCreateProfile={handleCreateProfile}
+          onUpdateProfile={handleUpdateProfile}
+          onDeleteProfile={handleDeleteProfile}
+          onAssignProfile={handleAssignProfile}
         />
       </div>
     </main>
@@ -131,28 +241,47 @@ export default function App() {
 
 function SessionWorkspace({
   session,
+  sessions,
+  profiles,
   view,
   activeLab,
   onNavigateConsole,
   onNavigateLab,
-  onRenameSession
+  onRenameSession,
+  onDeleteSession,
+  onCreateProfile,
+  onUpdateProfile,
+  onDeleteProfile,
+  onAssignProfile
 }: {
-  session: SessionItem;
+  session: ControlPlaneSessionRecord;
+  sessions: ControlPlaneSessionRecord[];
+  profiles: ControlPlaneAgentProfile[];
   view: ViewMode;
   activeLab: FeatureLabRoute;
   onNavigateConsole: () => void;
   onNavigateLab: (lab: FeatureLabRoute) => void;
-  onRenameSession: (title: string) => void;
+  onRenameSession: (title: string) => Promise<void>;
+  onDeleteSession: () => Promise<void>;
+  onCreateProfile: (input: ProfileMutationInput) => Promise<void>;
+  onUpdateProfile: (input: ProfileMutationInput) => Promise<void>;
+  onDeleteProfile: (id: string) => Promise<void>;
+  onAssignProfile: (profileId?: string) => Promise<void>;
 }) {
   const {
     chat,
     approvals,
     config,
+    toolCatalog,
+    extensionCatalog,
     events,
     summary,
     submitMessage,
     updateConfig,
     applyConfig,
+    updateEnabledTools,
+    updateEnabledExtensions,
+    syncAssistantConfig,
     resolveApproval,
     clearHistory,
     sessionId
@@ -162,8 +291,32 @@ function SessionWorkspace({
   const handleSendMessage = async (text: string) => {
     await submitMessage(text);
     if (shouldRenameSession(session.title)) {
-      onRenameSession(buildSessionTitle(text));
+      await onRenameSession(buildSessionTitle(text));
     }
+  };
+
+  const handleAssignProfile = async (profileId?: string) => {
+    await onAssignProfile(profileId);
+
+    if (!profileId) {
+      await syncAssistantConfig({ profileId: undefined });
+      return;
+    }
+
+    const profile = profiles.find((entry) => entry.id === profileId);
+    if (!profile) {
+      return;
+    }
+
+    await syncAssistantConfig({
+      profileId,
+      ...profile.config
+    });
+  };
+
+  const handleDeleteActiveSession = async () => {
+    await clearHistory();
+    await onDeleteSession();
   };
 
   return (
@@ -207,12 +360,17 @@ function SessionWorkspace({
             <div style={activeSessionBarStyle}>
               <div>
                 <div style={activeSessionLabelStyle}>Active session</div>
-                <strong>{session.title}</strong>
+                <strong>{session.title || "Untitled chat"}</strong>
                 <div style={activeSessionMetaStyle}>{sessionId}</div>
               </div>
-              <button type="button" style={secondaryActionStyle} onClick={() => clearHistory()}>
-                Clear chat
-              </button>
+              <div style={inlineActionsStyle}>
+                <button type="button" style={secondaryActionStyle} onClick={() => void clearHistory()}>
+                  Clear chat
+                </button>
+                <button type="button" style={dangerActionStyle} onClick={() => void handleDeleteActiveSession()}>
+                  Delete chat
+                </button>
+              </div>
             </div>
 
             <ChatShell
@@ -245,6 +403,19 @@ function SessionWorkspace({
           }}
           agentHost={resolveAgentHost()}
           sessionId={sessionId}
+          session={session}
+          sessions={sessions}
+          profiles={profiles}
+          toolCatalog={toolCatalog}
+          extensionCatalog={extensionCatalog}
+          onRenameSession={onRenameSession}
+          onClearSession={clearHistory}
+          onCreateProfile={onCreateProfile}
+          onUpdateProfile={onUpdateProfile}
+          onDeleteProfile={onDeleteProfile}
+          onAssignProfile={handleAssignProfile}
+          onUpdateEnabledTools={updateEnabledTools}
+          onUpdateEnabledExtensions={updateEnabledExtensions}
         />
       )}
     </div>
@@ -286,24 +457,6 @@ function getLabFromHash(): FeatureLabRoute {
     : DEFAULT_LAB;
 }
 
-function readStoredSessions(): SessionItem[] {
-  if (typeof window === "undefined") {
-    return [createSession(DEFAULT_SESSION_ID, "Main chat")];
-  }
-
-  const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-  if (!raw) {
-    return [createSession(DEFAULT_SESSION_ID, "Main chat")];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as SessionItem[];
-    return parsed.length > 0 ? parsed : [createSession(DEFAULT_SESSION_ID, "Main chat")];
-  } catch {
-    return [createSession(DEFAULT_SESSION_ID, "Main chat")];
-  }
-}
-
 function readStoredActiveSessionId() {
   if (typeof window === "undefined") {
     return DEFAULT_SESSION_ID;
@@ -312,16 +465,21 @@ function readStoredActiveSessionId() {
   return window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY) ?? DEFAULT_SESSION_ID;
 }
 
-function createSession(id = `chat-${crypto.randomUUID().slice(0, 8)}`, title = "New chat"): SessionItem {
+function createSessionRecord(
+  id = `chat-${crypto.randomUUID().slice(0, 8)}`,
+  title = "New chat"
+): ControlPlaneSessionRecord {
+  const timestamp = new Date().toISOString();
   return {
     id,
     title,
-    createdAt: new Date().toISOString()
+    createdAt: timestamp,
+    updatedAt: timestamp
   };
 }
 
-function shouldRenameSession(title: string) {
-  return title === "New chat" || title === "Main chat";
+function shouldRenameSession(title?: string) {
+  return !title || title === "New chat" || title === "Main chat";
 }
 
 function buildSessionTitle(text: string) {
@@ -335,6 +493,13 @@ const pageStyle = {
   color: "#111827",
   padding: 24,
   fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+} as const;
+
+const statusPanelStyle = {
+  background: "#fff",
+  border: "1px solid #d0d7de",
+  borderRadius: 12,
+  padding: 24
 } as const;
 
 const heroStyle = {
@@ -373,4 +538,6 @@ const secondaryColumnStyle = { display: "grid", gap: 16 } as const;
 const activeSessionBarStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #d0d7de", borderRadius: 12, padding: 16 } as const;
 const activeSessionLabelStyle = { color: "#57606a", fontSize: 12, marginBottom: 4 } as const;
 const activeSessionMetaStyle = { color: "#57606a", fontSize: 12, marginTop: 4 } as const;
+const inlineActionsStyle = { display: "flex", gap: 8, flexWrap: "wrap" } as const;
 const secondaryActionStyle = { border: "1px solid #d0d7de", background: "#fff", borderRadius: 999, padding: "8px 12px", cursor: "pointer" } as const;
+const dangerActionStyle = { ...secondaryActionStyle, borderColor: "#cf222e", color: "#cf222e" } as const;

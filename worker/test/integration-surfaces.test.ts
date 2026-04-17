@@ -5,7 +5,7 @@ import { createMcpState } from "../src/mcp/state.js";
 import { createDiagnosticsTool } from "../src/tools/server/diagnostics.js";
 
 describe("integration surfaces", () => {
-  it("loads the example extension through the registry exposure surface", () => {
+  it("loads the example extension through the registry exposure surface and supports enablement-aware cataloging", () => {
     const registry = createExtensionRegistry();
 
     expect(registry.getExposure()).toEqual({
@@ -18,14 +18,53 @@ describe("integration surfaces", () => {
           description:
             "Demonstrates a pragmatic extension registration surface for the Think scaffold.",
           status: "loaded",
-          capabilities: ["registry", "diagnostics"]
+          capabilities: ["registry", "diagnostics"],
+          enabled: true
         }
       ]
     });
 
+    expect(registry.getCatalog([])).toEqual({
+      count: 1,
+      extensions: [
+        {
+          id: "example-extension",
+          name: "Example Extension",
+          version: "0.1.0",
+          description:
+            "Demonstrates a pragmatic extension registration surface for the Think scaffold.",
+          status: "loaded",
+          capabilities: ["registry", "diagnostics"],
+          enabled: false,
+          limitations: [
+            "This scaffold currently exposes extensions through a static registry surface instead of dynamic runtime plugin loading."
+          ]
+        }
+      ]
+    });
+
+    expect(registry.getExposure([])).toEqual({
+      count: 0,
+      extensions: []
+    });
+
+    expect(registry.getDiagnostics([])).toEqual({
+      availableCount: 1,
+      enabledCount: 0,
+      loadedCount: 0,
+      extensionIds: ["example-extension"],
+      enabledExtensionIds: [],
+      disabledExtensionIds: ["example-extension"],
+      limitations: []
+    });
+
     expect(registry.getDiagnostics()).toEqual({
+      availableCount: 1,
+      enabledCount: 1,
       loadedCount: 1,
       extensionIds: ["example-extension"],
+      enabledExtensionIds: ["example-extension"],
+      disabledExtensionIds: [],
       limitations: [
         "This scaffold currently exposes extensions through a static registry surface instead of dynamic runtime plugin loading."
       ]
@@ -55,13 +94,13 @@ describe("integration surfaces", () => {
           r2FileCount: 0
         })
       },
-      getConfig: () => ({ model: "test-model" }),
+      getConfig: () => ({ model: "test-model", enabledExtensions: ["example-extension"] }),
       getSurfaces: () => ({
-        extensions: registry.getExposure(),
+        extensions: registry.getExposure(["example-extension"]),
         mcp: mcpState.getSurface()
       }),
       getDiagnostics: () => ({
-        extensions: registry.getDiagnostics(),
+        extensions: registry.getDiagnostics(["example-extension"]),
         mcp: mcpState.getDiagnostics()
       })
     });
@@ -73,14 +112,15 @@ describe("integration surfaces", () => {
 
     expect(result).toMatchObject({
       ok: true,
-      config: { model: "test-model" },
+      config: { model: "test-model", enabledExtensions: ["example-extension"] },
       surfaces: {
         extensions: {
           count: 1,
           extensions: [
             expect.objectContaining({
               id: "example-extension",
-              status: "loaded"
+              status: "loaded",
+              enabled: true
             })
           ]
         },
@@ -102,8 +142,11 @@ describe("integration surfaces", () => {
       },
       diagnostics: {
         extensions: {
+          availableCount: 1,
+          enabledCount: 1,
           loadedCount: 1,
-          extensionIds: ["example-extension"]
+          extensionIds: ["example-extension"],
+          enabledExtensionIds: ["example-extension"]
         },
         mcp: {
           serverCount: 1,

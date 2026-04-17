@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 
-const mockedState = {
+const mockedAssistantState = {
   chat: {
     messages: [
       {
@@ -11,7 +11,9 @@ const mockedState = {
         parts: [{ type: "text", text: "Hello from the main agent." }]
       }
     ],
-    status: "ready"
+    status: "ready",
+    clearHistory: vi.fn(),
+    sendMessage: vi.fn(async () => undefined)
   },
   approvals: [
     {
@@ -24,6 +26,28 @@ const mockedState = {
   config: {
     model: "test-model",
     systemPrompt: "Be helpful"
+  },
+  toolCatalog: {
+    count: 2,
+    enabledCount: 1,
+    tools: [
+      { id: "diagnostics", enabled: true, description: "Diagnostics" },
+      { id: "notes", enabled: false, description: "Notes" }
+    ]
+  },
+  extensionCatalog: {
+    count: 1,
+    extensions: [
+      {
+        id: "example-extension",
+        name: "Example Extension",
+        version: "0.1.0",
+        description: "Demo extension",
+        status: "loaded",
+        capabilities: ["registry"],
+        enabled: true
+      }
+    ]
   },
   events: [
     {
@@ -41,13 +65,58 @@ const mockedState = {
   submitMessage: vi.fn(async () => undefined),
   updateConfig: vi.fn(),
   applyConfig: vi.fn(async () => undefined),
+  updateEnabledTools: vi.fn(async () => undefined),
+  updateEnabledExtensions: vi.fn(async () => undefined),
+  syncAssistantConfig: vi.fn(async () => undefined),
+  refreshSessionState: vi.fn(async () => undefined),
   resolveApproval: vi.fn(),
-  clearHistory: vi.fn(),
+  clearHistory: vi.fn(async () => undefined),
   sessionId: "main"
 };
 
+const mockedControlPlane = {
+  snapshot: {
+    path: "/system/control-plane.json",
+    currentSessionId: "main",
+    document: {
+      version: 1,
+      sessions: [
+        {
+          id: "main",
+          title: "Main chat",
+          createdAt: "2026-04-17T00:00:00.000Z",
+          updatedAt: "2026-04-17T00:00:00.000Z"
+        }
+      ],
+      profiles: [
+        {
+          id: "profile-a",
+          name: "Profile A",
+          description: "Default profile",
+          config: { model: "test-model" },
+          createdAt: "2026-04-17T00:00:00.000Z",
+          updatedAt: "2026-04-17T00:00:00.000Z"
+        }
+      ]
+    },
+    toolCatalog: mockedAssistantState.toolCatalog,
+    extensionCatalog: mockedAssistantState.extensionCatalog,
+    assistantConfig: mockedAssistantState.config
+  },
+  loading: false,
+  error: null,
+  refresh: vi.fn(async () => undefined),
+  createSession: vi.fn(async () => undefined),
+  updateSession: vi.fn(async () => undefined),
+  deleteSession: vi.fn(async () => undefined),
+  createProfile: vi.fn(async () => undefined),
+  updateProfile: vi.fn(async () => undefined),
+  deleteProfile: vi.fn(async () => undefined)
+};
+
 vi.mock("./lib/agent", () => ({
-  useAssistantUiState: () => mockedState,
+  useAssistantUiState: () => mockedAssistantState,
+  useControlPlaneState: () => mockedControlPlane,
   resolveAgentHost: () => "http://localhost:8787"
 }));
 
@@ -76,6 +145,7 @@ import App from "./App";
 describe("App", () => {
   beforeEach(() => {
     window.location.hash = "#console";
+    vi.clearAllMocks();
   });
 
   it("renders assistant surfaces", () => {
@@ -88,6 +158,7 @@ describe("App", () => {
     expect(screen.getByText("Assistant config")).toBeInTheDocument();
     expect(screen.getByText("Event log")).toBeInTheDocument();
     expect(screen.getByText("Hello from the main agent.")).toBeInTheDocument();
+    expect(screen.getAllByText("Main chat").length).toBeGreaterThan(0);
   });
 
   it("submits a chat message via the shell", async () => {
@@ -101,17 +172,23 @@ describe("App", () => {
       fireEvent.click(screen.getByText("Send"));
     });
 
-    expect(mockedState.submitMessage).toHaveBeenCalledWith("Plan the next step");
+    expect(mockedAssistantState.submitMessage).toHaveBeenCalledWith("Plan the next step");
   });
 
-  it("creates a new chat session from the sidebar", async () => {
+  it("creates a new durable chat session from the sidebar", async () => {
     render(<App />);
 
     await act(async () => {
       fireEvent.click(screen.getByText("New chat"));
     });
 
-    expect(screen.getAllByText(/chat-/i).length).toBeGreaterThan(0);
+    expect(mockedControlPlane.createSession).toHaveBeenCalledTimes(1);
+    const firstCreateSessionCall = mockedControlPlane.createSession.mock.calls[0] as unknown as
+      | [Record<string, unknown>]
+      | undefined;
+    expect(firstCreateSessionCall?.[0]).toMatchObject({
+      title: "New chat"
+    });
   });
 
   it("renders the feature lab when hash navigation targets it", () => {
@@ -121,5 +198,6 @@ describe("App", () => {
 
     expect(screen.getByText("Integration surfaces and local tools")).toBeInTheDocument();
     expect(screen.getByText("Session lab")).toBeInTheDocument();
+    expect(screen.getByText("Profile management")).toBeInTheDocument();
   });
 });
