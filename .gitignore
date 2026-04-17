@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.vitest/
+.wrangler/
+.env
+.env.*
+.DS_Store
+*.log

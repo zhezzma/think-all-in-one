@@ -1,0 +1,21 @@
+{
+  "name": "think-all-in-one",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Monorepo scaffold for a Think assistant web app and Cloudflare Worker backend.",
+  "workspaces": [
+    "apps/*",
+    "worker"
+  ],
+  "scripts": {
+    "web": "sh -c '[ -d apps/web ] && npm --prefix apps/web run dev || echo \"apps/web is not scaffolded yet\"'",
+    "worker": "sh -c '[ -d worker ] && npm --prefix worker run dev || echo \"worker is not scaffolded yet\"'",
+    "test": "sh -c 'status=0; if [ -d worker ]; then npm --prefix worker run test || status=$?; fi; if [ -d apps/web ]; then npm --prefix apps/web run test || status=$?; fi; exit $status'",
+    "typecheck": "sh -c 'status=0; if [ -d worker ]; then npm --prefix worker run typecheck || status=$?; fi; if [ -d apps/web ]; then npm --prefix apps/web run typecheck || status=$?; fi; exit $status'",
+    "deploy": "sh -c '[ -d worker ] && npm --prefix worker run deploy || echo \"worker is not scaffolded yet\"'"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@think-all-in-one/worker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run --config vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/think": "^0.2.4",
+    "agents": "^0.11.2",
+    "workers-ai-provider": "^3.1.11"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260417.1",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.7",
+    "wrangler": "^4.11.1"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "think-all-in-one-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-17",
+  "compatibility_flags": ["nodejs_compat", "experimental"],
+  "ai": {
+    "binding": "AI"
+  },
+  "assets": {
+    "directory": "../apps/web/dist",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MainAssistantAgent",
+        "class_name": "MainAssistantAgent"
+      },
+      {
+        "name": "ResearchSubAgent",
+        "class_name": "ResearchSubAgent"
+      },
+      {
+        "name": "MemorySubAgent",
+        "class_name": "MemorySubAgent"
+      },
+      {
+        "name": "OpsSubAgent",
+        "class_name": "OpsSubAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "MainAssistantAgent",
+        "ResearchSubAgent",
+        "MemorySubAgent",
+        "OpsSubAgent"
+      ]
+    }
+  ]
+  // Optional R2 binding for durable file or artifact storage:
+  // ,"r2_buckets": [
+  //   {
+  //     "binding": "ARTIFACTS",
+  //     "bucket_name": "think-all-in-one-artifacts"
+  //   }
+  // ]
+}
