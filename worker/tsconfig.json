@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "WebWorker"],
+    "lib": ["ES2022", "DOM", "WebWorker", "ESNext.Decorators"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

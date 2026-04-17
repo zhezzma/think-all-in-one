@@ -4,10 +4,12 @@ import { getDefaultModel } from "../../lib/model.js";
 import type { Env } from "../../index.js";
 
 export class OpsSubAgent extends Think<Env> {
-  declare readonly env: Env;
+  private get workerEnv(): Env {
+    return (this as unknown as { env: Env }).env;
+  }
 
   getModel() {
-    return getDefaultModel(this.env);
+    return getDefaultModel(this.workerEnv);
   }
 
   override getSystemPrompt() {

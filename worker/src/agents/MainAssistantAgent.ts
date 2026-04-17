@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { Think, type Session } from "@cloudflare/think";
+import { callable } from "agents";
 import type { ToolSet, UIMessage } from "ai";
 import type { WorkspaceOptions } from "@cloudflare/shell";
 
@@ -31,7 +32,6 @@ const MAIN_ASSISTANT_PROTECTED_PATHS: ProtectedPathRule[] = [
 ];
 
 export class MainAssistantAgent extends Think<Env, AssistantConfig> {
-  declare readonly env: Env;
   readonly extensionRegistry: ExtensionRegistry;
   readonly mcpState: McpState;
 
@@ -49,9 +49,13 @@ export class MainAssistantAgent extends Think<Env, AssistantConfig> {
     this.mcpState = createMcpState();
   }
 
+  private get workerEnv(): Env {
+    return (this as unknown as { env: Env }).env;
+  }
+
   getModel() {
     const config = getAssistantConfigValue(this.getConfig());
-    return getDefaultModel(this.env, config.model);
+    return getDefaultModel(this.workerEnv, config.model);
   }
 
   override getSystemPrompt() {
@@ -82,10 +86,12 @@ export class MainAssistantAgent extends Think<Env, AssistantConfig> {
     };
   }
 
+  @callable()
   getAssistantConfig(): AssistantConfig {
     return getAssistantConfigValue(this.getConfig());
   }
 
+  @callable()
   getIntegrationSurfaces() {
     return {
       extensions: this.extensionRegistry.getExposure(),
@@ -93,6 +99,7 @@ export class MainAssistantAgent extends Think<Env, AssistantConfig> {
     };
   }
 
+  @callable()
   getIntegrationDiagnostics() {
     return {
       extensions: this.extensionRegistry.getDiagnostics(),
@@ -100,6 +107,7 @@ export class MainAssistantAgent extends Think<Env, AssistantConfig> {
     };
   }
 
+  @callable()
   async updateAssistantConfig(update: Partial<AssistantConfig>): Promise<AssistantConfig> {
     const previousConfig = this.getAssistantConfig();
     const nextConfig = {
@@ -118,10 +126,12 @@ export class MainAssistantAgent extends Think<Env, AssistantConfig> {
     }
   }
 
+  @callable()
   async saveSyntheticMessage(message: UIMessage): Promise<{ requestId: string; status: "completed" | "skipped" }> {
     return this.saveMessages((currentMessages) => [...currentMessages, message]);
   }
 
+  @callable()
   async continueLastTurn(body?: Record<string, unknown>) {
     return super.continueLastTurn(body);
   }

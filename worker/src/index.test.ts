@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const routeAgentRequest = vi.fn(async () => undefined as Response | undefined);
 
 vi.mock("agents", () => ({
-  routeAgentRequest
+  routeAgentRequest,
+  callable: () => (target: unknown) => target
 }));
 
 vi.mock("@cloudflare/think", () => ({
@@ -20,6 +21,12 @@ vi.mock("@cloudflare/think", () => ({
 
 vi.mock("workers-ai-provider", () => ({
   createWorkersAI: () => () => ({ provider: "workers-ai" })
+}));
+
+vi.mock("./workspace/createWorkspace.js", () => ({
+  createWorkspace: () => ({
+    getWorkspaceInfo: async () => ({ fileCount: 0, directoryCount: 0, totalBytes: 0, r2FileCount: 0 })
+  })
 }));
 
 describe("worker module", () => {

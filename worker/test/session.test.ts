@@ -6,6 +6,16 @@ const mockBaseContinueLastTurn = vi.fn(async (body?: Record<string, unknown>) =>
   status: body ? "completed" as const : "skipped" as const
 }));
 
+vi.mock("agents", () => ({
+  callable: () => (target: unknown) => target
+}));
+
+vi.mock("../src/workspace/createWorkspace.js", () => ({
+  createWorkspace: () => ({
+    getWorkspaceInfo: async () => ({ fileCount: 0, directoryCount: 0, totalBytes: 0, r2FileCount: 0 })
+  })
+}));
+
 vi.mock("@cloudflare/think", () => ({
   Think: class Think<Env = unknown, Config = Record<string, unknown>> {
     env!: Env;
