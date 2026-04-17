@@ -36,6 +36,7 @@ export type FeatureLabProps = {
   onRunClientTool: (id: string) => void;
   onRunAllClientTools: () => void;
   agentHost: string;
+  sessionId: string;
 };
 
 export function FeatureLab(props: FeatureLabProps) {
@@ -79,6 +80,7 @@ function renderLab(props: FeatureLabProps) {
           approvals={props.approvals}
           config={props.config}
           events={props.events}
+          sessionId={props.sessionId}
         />
       );
     case "workspace":

@@ -35,6 +35,7 @@ describe("FeatureLab", () => {
         onRunClientTool={onRunClientTool}
         onRunAllClientTools={onRunAllClientTools}
         agentHost="http://localhost:8787"
+        sessionId="main"
       />
     );
 

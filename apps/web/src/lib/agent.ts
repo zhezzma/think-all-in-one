@@ -4,6 +4,11 @@ import { useAgentChat } from "@cloudflare/ai-chat/react";
 
 const DEFAULT_AGENT_NAME = "MainAssistantAgent";
 const DEFAULT_INSTANCE_NAME = "main";
+const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const DEFAULT_SYSTEM_PROMPT = [
+  "You are the primary Think assistant for think-all-in-one.",
+  "Help with implementation, planning, and safe execution."
+].join("\n");
 
 export type AssistantConfigDraft = {
   model: string;
@@ -24,37 +29,27 @@ export type AgentEvent = {
   detail: string;
 };
 
-export function useMainAgent() {
+export function useMainAgent(sessionId = DEFAULT_INSTANCE_NAME) {
   return useAgent({
     agent: DEFAULT_AGENT_NAME,
-    name: DEFAULT_INSTANCE_NAME,
+    name: sessionId,
     host: resolveAgentHost()
   });
 }
 
-export function useAssistantUiState() {
-  const agent = useMainAgent();
+export function useAssistantUiState(sessionId = DEFAULT_INSTANCE_NAME) {
+  const agent = useMainAgent(sessionId);
   const chat = useAgentChat({ agent });
 
   const [config, setConfig] = useState<AssistantConfigDraft>({
-    model: "@cf/meta/llama-3.1-8b-instruct",
-    systemPrompt: [
-      "You are the primary Think assistant for think-all-in-one.",
-      "Help with implementation, planning, and safe execution."
-    ].join("\n")
+    model: DEFAULT_MODEL,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT
   });
 
-  const [approvals, setApprovals] = useState<ApprovalItem[]>([
-    {
-      id: "approval-protected-delete",
-      title: "Protected delete",
-      description: "Deleting protected workspace paths must be explicitly approved.",
-      status: "pending"
-    }
-  ]);
+  const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
 
   const [events, setEvents] = useState<AgentEvent[]>([
-    createEvent("system", "Assistant UI connected to MainAssistantAgent.")
+    createEvent("system", `Assistant UI connected to session ${sessionId}.`)
   ]);
 
   const messageCount = chat.messages.length;
@@ -133,6 +128,11 @@ export function useAssistantUiState() {
     prependEvent(setEvents, createEvent("approval", `Marked ${id} as ${status}.`));
   };
 
+  const clearHistory = () => {
+    chat.clearHistory();
+    prependEvent(setEvents, createEvent("chat.clear", `Cleared transcript for session ${sessionId}.`));
+  };
+
   return {
     agent,
     chat,
@@ -143,7 +143,9 @@ export function useAssistantUiState() {
     submitMessage,
     updateConfig,
     applyConfig,
-    resolveApproval
+    resolveApproval,
+    clearHistory,
+    sessionId
   };
 }
 

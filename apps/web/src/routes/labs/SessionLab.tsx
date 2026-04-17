@@ -10,9 +10,10 @@ export type SessionLabProps = {
   approvals: ApprovalItem[];
   config: AssistantConfigDraft;
   events: AgentEvent[];
+  sessionId: string;
 };
 
-export function SessionLab({ summary, messageCount, approvals, config, events }: SessionLabProps) {
+export function SessionLab({ summary, messageCount, approvals, config, events, sessionId }: SessionLabProps) {
   return (
     <section style={panelStyle}>
       <h2 style={titleStyle}>Session lab</h2>
@@ -22,6 +23,7 @@ export function SessionLab({ summary, messageCount, approvals, config, events }:
       </p>
 
       <div style={gridStyle}>
+        <MetricCard label="Session" value={sessionId} />
         <MetricCard label="Chat messages" value={String(messageCount)} />
         <MetricCard label="Connection" value={summary.connectionState} />
         <MetricCard label="Pending approvals" value={String(summary.pendingApprovals)} />

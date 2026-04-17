@@ -10,6 +10,7 @@ export function ConfigPanel({ config, onChange, onApply }: ConfigPanelProps) {
   return (
     <section style={panelStyle}>
       <h2 style={titleStyle}>Assistant config</h2>
+      <p style={copyStyle}>Per-chat config draft for the active agent session.</p>
       <label style={fieldStyle}>
         <span>Model</span>
         <input
@@ -41,4 +42,5 @@ const panelStyle = {
   gap: 12
 } as const;
 const titleStyle = { margin: 0 } as const;
+const copyStyle = { margin: "-4px 0 0", color: "#57606a", fontSize: 13 } as const;
 const fieldStyle = { display: "grid", gap: 6 } as const;

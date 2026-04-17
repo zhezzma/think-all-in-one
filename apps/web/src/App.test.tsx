@@ -41,7 +41,9 @@ const mockedState = {
   submitMessage: vi.fn(async () => undefined),
   updateConfig: vi.fn(),
   applyConfig: vi.fn(async () => undefined),
-  resolveApproval: vi.fn()
+  resolveApproval: vi.fn(),
+  clearHistory: vi.fn(),
+  sessionId: "main"
 };
 
 vi.mock("./lib/agent", () => ({
@@ -80,6 +82,8 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByText("Main assistant workspace")).toBeInTheDocument();
+    expect(screen.getByText("Chats")).toBeInTheDocument();
+    expect(screen.getByText("New chat")).toBeInTheDocument();
     expect(screen.getByText("Approval inbox")).toBeInTheDocument();
     expect(screen.getByText("Assistant config")).toBeInTheDocument();
     expect(screen.getByText("Event log")).toBeInTheDocument();
@@ -98,6 +102,16 @@ describe("App", () => {
     });
 
     expect(mockedState.submitMessage).toHaveBeenCalledWith("Plan the next step");
+  });
+
+  it("creates a new chat session from the sidebar", async () => {
+    render(<App />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("New chat"));
+    });
+
+    expect(screen.getAllByText(/chat-/i).length).toBeGreaterThan(0);
   });
 
   it("renders the feature lab when hash navigation targets it", () => {
