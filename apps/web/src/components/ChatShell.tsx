@@ -50,6 +50,16 @@ export function ChatShell({ messages, status = "ready", onSendMessage }: ChatShe
                     return renderStructuredTextPart(part.text, `${message.id}-text-${index}`);
                   }
 
+                  if (isReasoningPart(part)) {
+                    return (
+                      <ReasoningCard
+                        key={index}
+                        text={part.text}
+                        stateLabel={translateReasoningState("done")}
+                      />
+                    );
+                  }
+
                   if (part.type === "step-start") {
                     return <div key={index} style={stepDividerStyle}>步骤</div>;
                   }
@@ -216,6 +226,10 @@ function CollapsibleCard({ title, meta, content }: { title: string; meta: string
       <div style={collapsibleBodyStyle}>{content}</div>
     </details>
   );
+}
+
+function isReasoningPart(part: UIMessage["parts"][number]): part is UIMessage["parts"][number] & { type: "reasoning"; text: string } {
+  return part.type === "reasoning" && "text" in part && typeof part.text === "string";
 }
 
 function isToolPart(part: UIMessage["parts"][number]): part is Extract<UIMessage["parts"][number], { type: `tool-${string}`; input: unknown; state: unknown }> {

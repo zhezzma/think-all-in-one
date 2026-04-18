@@ -99,6 +99,35 @@ describe("ChatShell", () => {
     expect(screen.getByText("这是工具调用后的正常文本回复。")).toBeInTheDocument();
     expect(screen.getAllByText("点击展开").length).toBeGreaterThan(0);
   });
+
+  it("renders native reasoning parts as collapsible cards", () => {
+    render(
+      <ChatShell
+        status="ready"
+        messages={[
+          {
+            id: "m4",
+            role: "assistant",
+            parts: [
+              {
+                type: "reasoning",
+                text: "好的，用户让我看看目录下有什么，我先整理一下结果。"
+              },
+              {
+                type: "text",
+                text: "当前目录下只有 notes 目录。"
+              }
+            ]
+          }
+        ] as any}
+        onSendMessage={vi.fn(async () => undefined)}
+      />
+    );
+
+    expect(screen.getByText("思考过程")).toBeInTheDocument();
+    expect(screen.getByText("好的，用户让我看看目录下有什么，我先整理一下结果。")).toBeInTheDocument();
+    expect(screen.getByText("当前目录下只有 notes 目录。")).toBeInTheDocument();
+  });
 });
 
 describe("ApprovalsPanel", () => {
