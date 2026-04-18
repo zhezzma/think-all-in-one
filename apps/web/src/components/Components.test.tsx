@@ -38,13 +38,39 @@ describe("ChatShell", () => {
     expect(onSendMessage).toHaveBeenCalledWith("Ship it");
   });
 
-  it("renders tool calls in a friendly card", () => {
+  it("renders collapsible reasoning and tool blocks from transcript text", () => {
     render(
       <ChatShell
         status="ready"
         messages={[
           {
             id: "m2",
+            role: "assistant",
+            parts: [
+              {
+                type: "text",
+                text: `步骤\n{\n  "type": "reasoning",\n  "text": "先想一下笑话应该怎么讲。",\n  "state": "done"\n}\n\n工具调用：notes\n已完成\n输入\n{\n  "action": "set",\n  "key": "joke"\n}\n输出\n{\n  "saved": true\n}\n\n这是工具调用后的正常文本回复。`
+              }
+            ]
+          }
+        ]}
+        onSendMessage={vi.fn(async () => undefined)}
+      />
+    );
+
+    expect(screen.getByText("思考过程")).toBeInTheDocument();
+    expect(screen.getByText("工具调用：notes")).toBeInTheDocument();
+    expect(screen.getByText("这是工具调用后的正常文本回复。")).toBeInTheDocument();
+    expect(screen.getAllByText("点击展开").length).toBeGreaterThan(0);
+  });
+
+  it("renders tool calls in a friendly card", () => {
+    render(
+      <ChatShell
+        status="ready"
+        messages={[
+          {
+            id: "m3",
             role: "assistant",
             parts: [
               {
@@ -71,7 +97,7 @@ describe("ChatShell", () => {
 
     expect(screen.getAllByText(/工具调用：grep/).length).toBeGreaterThan(0);
     expect(screen.getByText("这是工具调用后的正常文本回复。")).toBeInTheDocument();
-    expect(screen.getAllByText("输入").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("点击展开").length).toBeGreaterThan(0);
   });
 });
 
@@ -124,7 +150,7 @@ describe("ConfigPanel", () => {
 });
 
 describe("EventLog", () => {
-  it("renders timestamped agent events", () => {
+  it("renders timestamped agent events as collapsible entries", () => {
     render(
       <EventLog
         events={[
@@ -138,7 +164,9 @@ describe("EventLog", () => {
       />
     );
 
+    expect(screen.getByText("system")).toBeInTheDocument();
     expect(screen.getByText("UI booted")).toBeInTheDocument();
     expect(screen.getByText("2026-04-17T00:00:00.000Z")).toBeInTheDocument();
+    expect(screen.getByText("点击展开")).toBeInTheDocument();
   });
 });
