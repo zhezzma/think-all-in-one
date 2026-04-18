@@ -73,29 +73,28 @@ export function SessionLab({
 
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Session lab</h2>
+      <h2 style={titleStyle}>会话实验室</h2>
       <p style={copyStyle}>
-        Inspect the current assistant session state, manage durable session metadata, and maintain
-        reusable profiles stored in the control plane.
+        查看当前助手会话状态，管理持久化会话元数据，并维护保存在控制面里的可复用配置档案。
       </p>
 
       <div style={gridStyle}>
-        <MetricCard label="Session" value={sessionId} />
-        <MetricCard label="Chat messages" value={String(messageCount)} />
-        <MetricCard label="Connection" value={summary.connectionState} />
-        <MetricCard label="Pending approvals" value={String(summary.pendingApprovals)} />
-        <MetricCard label="Known sessions" value={String(sessions.length)} />
-        <MetricCard label="Profiles" value={String(profiles.length)} />
+        <MetricCard label="会话 ID" value={sessionId} />
+        <MetricCard label="聊天消息" value={String(messageCount)} />
+        <MetricCard label="连接状态" value={summary.connectionState} />
+        <MetricCard label="待审批" value={String(summary.pendingApprovals)} />
+        <MetricCard label="已知会话" value={String(sessions.length)} />
+        <MetricCard label="配置档案" value={String(profiles.length)} />
       </div>
 
       <div style={stackStyle}>
         <section style={sectionCardStyle}>
-          <h3 style={sectionTitleStyle}>Active session metadata</h3>
+          <h3 style={sectionTitleStyle}>当前会话元数据</h3>
           <div style={metaGridStyle}>
             <label style={fieldStyle}>
-              <span style={fieldLabelStyle}>Session title</span>
+              <span style={fieldLabelStyle}>会话标题</span>
               <input
-                aria-label="Session title"
+                aria-label="会话标题"
                 style={inputStyle}
                 value={renameDraft}
                 onChange={(event) => setRenameDraft(event.target.value)}
@@ -103,16 +102,16 @@ export function SessionLab({
             </label>
 
             <label style={fieldStyle}>
-              <span style={fieldLabelStyle}>Applied profile</span>
+              <span style={fieldLabelStyle}>已应用档案</span>
               <select
-                aria-label="Applied profile"
+                aria-label="已应用档案"
                 style={inputStyle}
                 value={session.profileId ?? ""}
                 onChange={(event) => {
                   void onAssignProfile(event.target.value || undefined);
                 }}
               >
-                <option value="">No profile</option>
+                <option value="">不使用档案</option>
                 {profiles.map((profile) => (
                   <option key={profile.id} value={profile.id}>
                     {profile.name}
@@ -124,10 +123,10 @@ export function SessionLab({
 
           <div style={actionRowStyle}>
             <button type="button" style={primaryActionStyle} onClick={() => void onRenameSession(renameDraft)}>
-              Save title
+              保存标题
             </button>
             <button type="button" style={secondaryActionStyle} onClick={() => void onClearSession()}>
-              Clear session history
+              清空会话历史
             </button>
           </div>
 
@@ -145,48 +144,48 @@ export function SessionLab({
         </section>
 
         <section style={sectionCardStyle}>
-          <h3 style={sectionTitleStyle}>Profile management</h3>
+          <h3 style={sectionTitleStyle}>档案管理</h3>
           <div style={formGridStyle}>
             <label style={fieldStyle}>
-              <span style={fieldLabelStyle}>Profile id</span>
+              <span style={fieldLabelStyle}>档案 ID</span>
               <input
-                aria-label="Profile id"
+                aria-label="档案 ID"
                 style={inputStyle}
                 value={profileDraft.id}
                 onChange={(event) => setProfileDraft((current) => ({ ...current, id: event.target.value }))}
               />
             </label>
             <label style={fieldStyle}>
-              <span style={fieldLabelStyle}>Profile name</span>
+              <span style={fieldLabelStyle}>档案名称</span>
               <input
-                aria-label="Profile name"
+                aria-label="档案名称"
                 style={inputStyle}
                 value={profileDraft.name}
                 onChange={(event) => setProfileDraft((current) => ({ ...current, name: event.target.value }))}
               />
             </label>
             <label style={fieldStyle}>
-              <span style={fieldLabelStyle}>Description</span>
+              <span style={fieldLabelStyle}>描述</span>
               <input
-                aria-label="Profile description"
+                aria-label="档案描述"
                 style={inputStyle}
                 value={profileDraft.description}
                 onChange={(event) => setProfileDraft((current) => ({ ...current, description: event.target.value }))}
               />
             </label>
             <label style={fieldStyle}>
-              <span style={fieldLabelStyle}>Model override</span>
+              <span style={fieldLabelStyle}>模型覆盖</span>
               <input
-                aria-label="Profile model"
+                aria-label="档案模型"
                 style={inputStyle}
                 value={profileDraft.model}
                 onChange={(event) => setProfileDraft((current) => ({ ...current, model: event.target.value }))}
               />
             </label>
             <label style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
-              <span style={fieldLabelStyle}>System prompt override</span>
+              <span style={fieldLabelStyle}>系统提示词覆盖</span>
               <textarea
-                aria-label="Profile system prompt"
+                aria-label="档案系统提示词"
                 style={textAreaStyle}
                 value={profileDraft.systemPrompt}
                 onChange={(event) => setProfileDraft((current) => ({ ...current, systemPrompt: event.target.value }))}
@@ -210,7 +209,7 @@ export function SessionLab({
                 })
               }
             >
-              Create profile
+              创建档案
             </button>
             <button
               type="button"
@@ -227,7 +226,7 @@ export function SessionLab({
                 })
               }
             >
-              Update profile
+              更新档案
             </button>
           </div>
 
@@ -253,14 +252,14 @@ export function SessionLab({
                       })
                     }
                   >
-                    Edit draft
+                    编辑草稿
                   </button>
                   <button
                     type="button"
                     style={dangerActionStyle}
                     onClick={() => void onDeleteProfile(profile.id)}
                   >
-                    Delete
+                    删除
                   </button>
                 </div>
               </li>
@@ -269,12 +268,12 @@ export function SessionLab({
         </section>
 
         <section style={sectionCardStyle}>
-          <h3 style={sectionTitleStyle}>Approval state</h3>
+          <h3 style={sectionTitleStyle}>审批状态</h3>
           <pre style={preStyle}>{JSON.stringify(approvals, null, 2)}</pre>
         </section>
 
         <section style={sectionCardStyle}>
-          <h3 style={sectionTitleStyle}>Event timeline</h3>
+          <h3 style={sectionTitleStyle}>事件时间线</h3>
           <pre style={preStyle}>{JSON.stringify(events.slice(0, 8), null, 2)}</pre>
         </section>
       </div>

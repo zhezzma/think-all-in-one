@@ -66,7 +66,7 @@ export default function App() {
 
     setIsMutating(true);
     void controlPlane
-      .createSession({ id: DEFAULT_SESSION_ID, title: "Main chat" })
+      .createSession({ id: DEFAULT_SESSION_ID, title: "主聊天" })
       .then(() => {
         setActiveSessionId(DEFAULT_SESSION_ID);
       })
@@ -166,7 +166,7 @@ export default function App() {
     return (
       <main style={pageStyle}>
         <section style={statusPanelStyle}>
-          <h1 style={headingStyle}>Control plane unavailable</h1>
+          <h1 style={headingStyle}>控制面暂不可用</h1>
           <p style={subheadingStyle}>{controlPlane.error}</p>
         </section>
       </main>
@@ -177,8 +177,8 @@ export default function App() {
     return (
       <main style={pageStyle}>
         <section style={statusPanelStyle}>
-          <h1 style={headingStyle}>Loading workspace…</h1>
-          <p style={subheadingStyle}>Preparing a durable chat session.</p>
+          <h1 style={headingStyle}>正在加载工作台…</h1>
+          <p style={subheadingStyle}>正在准备可持久化的聊天会话。</p>
         </section>
       </main>
     );
@@ -190,13 +190,13 @@ export default function App() {
         <aside style={sidebarStyle}>
           <div style={sidebarHeaderStyle}>
             <div>
-              <h2 style={sidebarTitleStyle}>Chats</h2>
+              <h2 style={sidebarTitleStyle}>聊天列表</h2>
               <p style={sidebarCopyStyle}>
-                {sessions.length} active session{sessions.length === 1 ? "" : "s"}
+                共 {sessions.length} 个会话
               </p>
             </div>
             <button type="button" style={newChatButtonStyle} onClick={() => void handleCreateSession()}>
-              New chat
+              新建聊天
             </button>
           </div>
 
@@ -324,16 +324,15 @@ function SessionWorkspace({
       <header style={heroStyle}>
         <div>
           <p style={eyebrowStyle}>think-all-in-one</p>
-          <h1 style={headingStyle}>Main assistant workspace</h1>
+          <h1 style={headingStyle}>主助手工作台</h1>
           <p style={subheadingStyle}>
-            A usable multi-chat client for MainAssistantAgent. Start a new chat, switch sessions,
-            talk to the agent, inspect config, and keep an event trail for the active thread.
+            一个真正可用的多会话助手客户端。你可以新建聊天、切换会话、和 agent 对话、查看配置，并追踪当前会话的事件记录。
           </p>
         </div>
         <dl style={summaryGridStyle}>
-          <SummaryCard label="Messages" value={String(summary.messageCount)} />
-          <SummaryCard label="Connection" value={summary.connectionState} />
-          <SummaryCard label="Pending approvals" value={String(summary.pendingApprovals)} />
+          <SummaryCard label="消息数" value={String(summary.messageCount)} />
+          <SummaryCard label="连接状态" value={summary.connectionState} />
+          <SummaryCard label="待审批" value={String(summary.pendingApprovals)} />
         </dl>
       </header>
 
@@ -343,14 +342,14 @@ function SessionWorkspace({
           style={view === "console" ? activeTabStyle : tabStyle}
           onClick={onNavigateConsole}
         >
-          Console
+          控制台
         </button>
         <button
           type="button"
           style={view === "lab" ? activeTabStyle : tabStyle}
           onClick={() => onNavigateLab(activeLab)}
         >
-          Feature Lab
+          功能实验室
         </button>
       </nav>
 
@@ -359,16 +358,16 @@ function SessionWorkspace({
           <div style={primaryColumnStyle}>
             <div style={activeSessionBarStyle}>
               <div>
-                <div style={activeSessionLabelStyle}>Active session</div>
+                <div style={activeSessionLabelStyle}>当前会话</div>
                 <strong>{session.title || "Untitled chat"}</strong>
                 <div style={activeSessionMetaStyle}>{sessionId}</div>
               </div>
               <div style={inlineActionsStyle}>
                 <button type="button" style={secondaryActionStyle} onClick={() => void clearHistory()}>
-                  Clear chat
+                  清空聊天
                 </button>
                 <button type="button" style={dangerActionStyle} onClick={() => void handleDeleteActiveSession()}>
-                  Delete chat
+                  删除聊天
                 </button>
               </div>
             </div>
@@ -467,7 +466,7 @@ function readStoredActiveSessionId() {
 
 function createSessionRecord(
   id = `chat-${crypto.randomUUID().slice(0, 8)}`,
-  title = "New chat"
+  title = "新聊天"
 ): ControlPlaneSessionRecord {
   const timestamp = new Date().toISOString();
   return {
@@ -479,7 +478,7 @@ function createSessionRecord(
 }
 
 function shouldRenameSession(title?: string) {
-  return !title || title === "New chat" || title === "Main chat";
+  return !title || title === "新聊天" || title === "主聊天" || title === "Main chat";
 }
 
 function buildSessionTitle(text: string) {

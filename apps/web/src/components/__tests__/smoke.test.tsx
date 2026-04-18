@@ -51,10 +51,10 @@ describe("frontend smoke", () => {
       </div>
     );
 
-    expect(screen.getByText("Assistant chat")).toBeInTheDocument();
-    expect(screen.getByText("Approval inbox")).toBeInTheDocument();
-    expect(screen.getByText("Assistant config")).toBeInTheDocument();
-    expect(screen.getByText("Event log")).toBeInTheDocument();
+    expect(screen.getByText("助手对话")).toBeInTheDocument();
+    expect(screen.getByText("审批列表")).toBeInTheDocument();
+    expect(screen.getByText("助手配置")).toBeInTheDocument();
+    expect(screen.getByText("事件日志")).toBeInTheDocument();
     expect(screen.getByText("System online.")).toBeInTheDocument();
   });
 
@@ -63,12 +63,12 @@ describe("frontend smoke", () => {
 
     render(<ChatShell status="ready" messages={[]} onSendMessage={onSendMessage} />);
 
-    fireEvent.change(screen.getByLabelText("Message input"), {
+    fireEvent.change(screen.getByLabelText("消息输入框"), {
       target: { value: "Run smoke verification" }
     });
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Send"));
+      fireEvent.click(screen.getByText("发送"));
     });
 
     expect(onSendMessage).toHaveBeenCalledWith("Run smoke verification");

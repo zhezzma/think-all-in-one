@@ -17,13 +17,13 @@ import { ToolsLab } from "./labs/ToolsLab";
 import { WorkspaceLab } from "./labs/WorkspaceLab";
 
 export const labRoutes = [
-  { id: "session", label: "Session" },
-  { id: "workspace", label: "Workspace" },
-  { id: "tools", label: "Tools" },
-  { id: "client-tools", label: "Client tools" },
-  { id: "subagents", label: "Sub-agents" },
+  { id: "session", label: "会话" },
+  { id: "workspace", label: "工作区" },
+  { id: "tools", label: "工具" },
+  { id: "client-tools", label: "客户端工具" },
+  { id: "subagents", label: "子代理" },
   { id: "mcp", label: "MCP" },
-  { id: "extensions", label: "Extensions" }
+  { id: "extensions", label: "扩展" }
 ] as const;
 
 export type FeatureLabRoute = (typeof labRoutes)[number]["id"];
@@ -75,11 +75,10 @@ export function FeatureLab(props: FeatureLabProps) {
     <section style={shellStyle}>
       <header style={headerStyle}>
         <div>
-          <p style={eyebrowStyle}>Feature Lab</p>
-          <h1 style={titleStyle}>Integration surfaces and local tools</h1>
+          <p style={eyebrowStyle}>功能实验室</p>
+          <h1 style={titleStyle}>集成能力与本地工具</h1>
           <p style={copyStyle}>
-            Focused, inspectable views for session state, workspace metadata, tools, sub-agents,
-            MCP, and extensions.
+            这里集中展示会话状态、工作区元数据、工具、子代理、MCP 与扩展等可观察能力。
           </p>
         </div>
         <nav aria-label="Feature lab navigation" style={navStyle}>

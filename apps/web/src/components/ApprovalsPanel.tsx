@@ -8,24 +8,24 @@ type ApprovalsPanelProps = {
 export function ApprovalsPanel({ approvals, onResolve }: ApprovalsPanelProps) {
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Approval inbox</h2>
+      <h2 style={titleStyle}>审批列表</h2>
       <div style={listStyle}>
         {approvals.length === 0 ? (
-          <p style={emptyStyle}>No pending approvals in this chat.</p>
+          <p style={emptyStyle}>当前会话没有待审批操作。</p>
         ) : (
           approvals.map((approval) => (
             <article key={approval.id} style={itemStyle}>
               <div>
                 <strong>{approval.title}</strong>
                 <p style={descriptionStyle}>{approval.description}</p>
-                <small>Status: {approval.status}</small>
+                <small>状态：{approval.status}</small>
               </div>
               <div style={actionsStyle}>
                 <button type="button" onClick={() => onResolve(approval.id, "approved")}>
-                  Approve
+                  通过
                 </button>
                 <button type="button" onClick={() => onResolve(approval.id, "rejected")}>
-                  Reject
+                  拒绝
                 </button>
               </div>
             </article>

@@ -7,7 +7,7 @@ type EventLogProps = {
 export function EventLog({ events }: EventLogProps) {
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Event log</h2>
+      <h2 style={titleStyle}>事件日志</h2>
       <ul style={listStyle}>
         {events.map((event) => (
           <li key={event.id} style={itemStyle}>

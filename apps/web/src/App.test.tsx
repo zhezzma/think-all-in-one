@@ -151,25 +151,25 @@ describe("App", () => {
   it("renders assistant surfaces", () => {
     render(<App />);
 
-    expect(screen.getByText("Main assistant workspace")).toBeInTheDocument();
-    expect(screen.getByText("Chats")).toBeInTheDocument();
-    expect(screen.getByText("New chat")).toBeInTheDocument();
-    expect(screen.getByText("Approval inbox")).toBeInTheDocument();
-    expect(screen.getByText("Assistant config")).toBeInTheDocument();
-    expect(screen.getByText("Event log")).toBeInTheDocument();
+    expect(screen.getByText("主助手工作台")).toBeInTheDocument();
+    expect(screen.getByText("聊天列表")).toBeInTheDocument();
+    expect(screen.getByText("新建聊天")).toBeInTheDocument();
+    expect(screen.getByText("审批列表")).toBeInTheDocument();
+    expect(screen.getByText("助手配置")).toBeInTheDocument();
+    expect(screen.getByText("事件日志")).toBeInTheDocument();
     expect(screen.getByText("Hello from the main agent.")).toBeInTheDocument();
-    expect(screen.getAllByText("Main chat").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Main chat").length + screen.queryAllByText("主聊天").length).toBeGreaterThan(0);
   });
 
   it("submits a chat message via the shell", async () => {
     render(<App />);
 
-    fireEvent.change(screen.getByLabelText("Message input"), {
+    fireEvent.change(screen.getByLabelText("消息输入框"), {
       target: { value: "Plan the next step" }
     });
 
     await act(async () => {
-      fireEvent.click(screen.getByText("Send"));
+      fireEvent.click(screen.getByText("发送"));
     });
 
     expect(mockedAssistantState.submitMessage).toHaveBeenCalledWith("Plan the next step");
@@ -179,7 +179,7 @@ describe("App", () => {
     render(<App />);
 
     await act(async () => {
-      fireEvent.click(screen.getByText("New chat"));
+      fireEvent.click(screen.getByText("新建聊天"));
     });
 
     expect(mockedControlPlane.createSession).toHaveBeenCalledTimes(1);
@@ -187,7 +187,7 @@ describe("App", () => {
       | [Record<string, unknown>]
       | undefined;
     expect(firstCreateSessionCall?.[0]).toMatchObject({
-      title: "New chat"
+      title: "新聊天"
     });
   });
 
@@ -196,8 +196,8 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(screen.getByText("Integration surfaces and local tools")).toBeInTheDocument();
-    expect(screen.getByText("Session lab")).toBeInTheDocument();
-    expect(screen.getByText("Profile management")).toBeInTheDocument();
+    expect(screen.getByText("集成能力与本地工具")).toBeInTheDocument();
+    expect(screen.getByText("会话实验室")).toBeInTheDocument();
+    expect(screen.getByText("档案管理")).toBeInTheDocument();
   });
 });

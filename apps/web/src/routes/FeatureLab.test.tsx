@@ -46,14 +46,14 @@ describe("FeatureLab", () => {
         sessionId="main"
         session={{
           id: "main",
-          title: "Main chat",
+          title: "主聊天",
           createdAt: "2026-04-17T00:00:00.000Z",
           updatedAt: "2026-04-17T00:00:00.000Z"
         }}
         sessions={[
           {
             id: "main",
-            title: "Main chat",
+            title: "主聊天",
             createdAt: "2026-04-17T00:00:00.000Z",
             updatedAt: "2026-04-17T00:00:00.000Z"
           }
@@ -98,7 +98,7 @@ describe("FeatureLab", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Toggle tool notes" }));
     expect(onUpdateEnabledTools).toHaveBeenCalledWith(["diagnostics", "notes"]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Session" }));
+    fireEvent.click(screen.getByRole("button", { name: "会话" }));
     expect(onNavigate).toHaveBeenCalledWith("session");
   });
 });
