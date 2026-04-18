@@ -5,7 +5,12 @@ import { ChatShell } from "./components/ChatShell";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { EventLog } from "./components/EventLog";
 import {
+  AUTH_TOKEN_STORAGE_KEY,
+  clearStoredAuthToken,
+  loginWithToken,
+  REQUIRED_AUTH_TOKEN,
   resolveAgentHost,
+  setStoredAuthToken,
   useAssistantUiState,
   useControlPlaneState,
   type ControlPlaneAgentProfile,
@@ -34,6 +39,31 @@ type ProfileMutationInput = {
 };
 
 export default function App() {
+  const [authToken, setAuthToken] = useState(readStoredAuthToken);
+
+  if (!authToken) {
+    return (
+      <LoginScreen
+        onLogin={(token) => {
+          setStoredAuthToken(token);
+          setAuthToken(token);
+        }}
+      />
+    );
+  }
+
+  return (
+    <AuthenticatedApp
+      authToken={authToken}
+      onLogout={() => {
+        clearStoredAuthToken();
+        setAuthToken("");
+      }}
+    />
+  );
+}
+
+function AuthenticatedApp({ authToken, onLogout }: { authToken: string; onLogout: () => void }) {
   const controlPlane = useControlPlaneState();
   const sessions = controlPlane.snapshot?.document.sessions ?? [];
   const profiles = controlPlane.snapshot?.document.profiles ?? [];
@@ -200,6 +230,14 @@ export default function App() {
             </button>
           </div>
 
+          <div style={authInfoStyle}>
+            <div style={authMetaLabelStyle}>当前令牌</div>
+            <code style={authTokenPreviewStyle}>{authToken}</code>
+            <button type="button" style={logoutButtonStyle} onClick={onLogout}>
+              退出登录
+            </button>
+          </div>
+
           <div style={sessionListStyle}>
             {sessions.map((item) => (
               <button
@@ -235,6 +273,55 @@ export default function App() {
           onAssignProfile={handleAssignProfile}
         />
       </div>
+    </main>
+  );
+}
+
+function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
+  const [token, setToken] = useState(REQUIRED_AUTH_TOKEN);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  return (
+    <main style={pageStyle}>
+      <section style={loginShellStyle}>
+        <p style={eyebrowStyle}>think-all-in-one</p>
+        <h1 style={headingStyle}>登录到 Think 工作台</h1>
+        <p style={subheadingStyle}>输入访问令牌后，才允许进入主界面并发起所有 agent / chat API 请求。</p>
+
+        <form
+          style={loginFormStyle}
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setSubmitting(true);
+            setError("");
+
+            try {
+              await loginWithToken(token);
+              onLogin(token);
+            } catch (cause) {
+              setError(cause instanceof Error ? cause.message : "登录失败，请重试。");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          <label style={loginLabelStyle}>
+            <span>访问令牌</span>
+            <input
+              aria-label="访问令牌"
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              style={loginInputStyle}
+              placeholder="请输入访问令牌"
+            />
+          </label>
+          {error ? <p style={loginErrorStyle}>{error}</p> : null}
+          <button type="submit" style={loginButtonStyle} disabled={submitting}>
+            {submitting ? "登录中…" : "登录"}
+          </button>
+        </form>
+      </section>
     </main>
   );
 }
@@ -456,6 +543,14 @@ function getLabFromHash(): FeatureLabRoute {
     : DEFAULT_LAB;
 }
 
+function readStoredAuthToken() {
+  if (typeof window === "undefined") {
+    return REQUIRED_AUTH_TOKEN;
+  }
+
+  return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) ?? "";
+}
+
 function readStoredActiveSessionId() {
   if (typeof window === "undefined") {
     return DEFAULT_SESSION_ID;
@@ -501,6 +596,22 @@ const statusPanelStyle = {
   padding: 24
 } as const;
 
+const loginShellStyle = {
+  maxWidth: 520,
+  margin: "8vh auto 0",
+  background: "#fff",
+  border: "1px solid #d0d7de",
+  borderRadius: 16,
+  padding: 24,
+  display: "grid",
+  gap: 16
+} as const;
+const loginFormStyle = { display: "grid", gap: 12 } as const;
+const loginLabelStyle = { display: "grid", gap: 8 } as const;
+const loginInputStyle = { border: "1px solid #d0d7de", borderRadius: 10, padding: 12 } as const;
+const loginButtonStyle = { border: "none", borderRadius: 10, padding: "12px 16px", background: "#111827", color: "#fff", cursor: "pointer" } as const;
+const loginErrorStyle = { margin: 0, color: "#cf222e" } as const;
+
 const heroStyle = {
   display: "grid",
   gridTemplateColumns: "2fr 1fr",
@@ -525,6 +636,10 @@ const sidebarHeaderStyle = { display: "flex", justifyContent: "space-between", g
 const sidebarTitleStyle = { margin: 0 } as const;
 const sidebarCopyStyle = { margin: "4px 0 0", color: "#57606a", fontSize: 13 } as const;
 const newChatButtonStyle = { border: "none", borderRadius: 999, padding: "8px 12px", background: "#1f6feb", color: "#fff", cursor: "pointer", whiteSpace: "nowrap" } as const;
+const authInfoStyle = { display: "grid", gap: 8, padding: 12, background: "#f8fafc", border: "1px solid #d0d7de", borderRadius: 10 } as const;
+const authMetaLabelStyle = { color: "#57606a", fontSize: 12 } as const;
+const authTokenPreviewStyle = { background: "#fff", border: "1px solid #d0d7de", borderRadius: 8, padding: 8, fontSize: 12 } as const;
+const logoutButtonStyle = { border: "1px solid #d0d7de", background: "#fff", borderRadius: 999, padding: "8px 12px", cursor: "pointer" } as const;
 const sessionListStyle = { display: "grid", gap: 8 } as const;
 const sessionButtonStyle = { textAlign: "left", border: "1px solid #d0d7de", background: "#f8fafc", borderRadius: 10, padding: 12, cursor: "pointer", display: "grid", gap: 4 } as const;
 const activeSessionButtonStyle = { ...sessionButtonStyle, background: "#111827", color: "#fff", border: "1px solid #111827" } as const;

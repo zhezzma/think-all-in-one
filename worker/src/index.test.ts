@@ -67,9 +67,8 @@ describe("worker module", () => {
     });
   });
 
-  it("short-circuits when routeAgentRequest returns a response", async () => {
+  it("rejects agent routes without a valid token", async () => {
     const mod = await import("./index.js");
-    routeAgentRequest.mockResolvedValueOnce(new Response("agent", { status: 202 }));
 
     const response = await mod.default.fetch(
       new Request("https://example.com/agents/main"),
@@ -83,8 +82,51 @@ describe("worker module", () => {
       { waitUntil() {} }
     );
 
+    expect(response.status).toBe(401);
+    expect(routeAgentRequest).not.toHaveBeenCalled();
+  });
+
+  it("short-circuits when routeAgentRequest returns a response for authorized agent routes", async () => {
+    const mod = await import("./index.js");
+    routeAgentRequest.mockResolvedValueOnce(new Response("agent", { status: 202 }));
+
+    const response = await mod.default.fetch(
+      new Request("https://example.com/agents/main?token=1234567809"),
+      {
+        AI: {},
+        MainAssistantAgent: {},
+        ResearchSubAgent: {},
+        MemorySubAgent: {},
+        OpsSubAgent: {}
+      },
+      { waitUntil() {} }
+    );
+
     expect(response.status).toBe(202);
     await expect(response.text()).resolves.toBe("agent");
+  });
+
+  it("accepts login requests with the configured token", async () => {
+    const mod = await import("./index.js");
+
+    const response = await mod.default.fetch(
+      new Request("https://example.com/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: "1234567809" })
+      }),
+      {
+        AI: {},
+        MainAssistantAgent: {},
+        ResearchSubAgent: {},
+        MemorySubAgent: {},
+        OpsSubAgent: {}
+      },
+      { waitUntil() {} }
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ ok: true });
   });
 
   it("falls back to 404 when no route matches and assets are absent", async () => {

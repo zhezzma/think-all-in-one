@@ -17,6 +17,8 @@ const DEFAULT_SYSTEM_PROMPT = [
   "You are the primary Think assistant for think-all-in-one.",
   "Help with implementation, planning, and safe execution."
 ].join("\n");
+export const AUTH_TOKEN_STORAGE_KEY = "think-all-in-one.auth-token";
+export const REQUIRED_AUTH_TOKEN = "1234567809";
 
 export type AssistantConfigDraft = {
   model: string;
@@ -139,11 +141,62 @@ type MainAgentStub = {
   deleteAgentProfile?: (id: string) => Promise<{ deleted: boolean; id: string }>;
 };
 
+export function getStoredAuthToken() {
+  if (typeof window === "undefined") {
+    return REQUIRED_AUTH_TOKEN;
+  }
+
+  return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) ?? "";
+}
+
+export function setStoredAuthToken(token: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+}
+
+export function clearStoredAuthToken() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+export function getAuthHeaders(): HeadersInit {
+  const token = getStoredAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function loginWithToken(token: string) {
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ token })
+  });
+
+  if (!response.ok) {
+    throw new Error("令牌无效，请重试。");
+  }
+
+  return response.json() as Promise<{ ok: boolean }>;
+}
+
 export function useMainAgent(sessionId = DEFAULT_INSTANCE_NAME) {
+  const token = getStoredAuthToken();
+
   return useAgent({
     agent: DEFAULT_AGENT_NAME,
     name: sessionId,
-    host: resolveAgentHost()
+    host: resolveAgentHost(),
+    query: {
+      token
+    }
   });
 }
 
@@ -264,7 +317,13 @@ export function useControlPlaneState() {
 
 export function useAssistantUiState(sessionId = DEFAULT_INSTANCE_NAME) {
   const agent = useMainAgent(sessionId);
-  const chat = useAgentChat({ agent });
+  const chat = useAgentChat({
+    agent,
+    headers: getAuthHeaders(),
+    prepareSendMessagesRequest: async () => ({
+      headers: getAuthHeaders()
+    })
+  });
 
   const [config, setConfig] = useState<AssistantConfigDraft>({
     model: DEFAULT_MODEL,

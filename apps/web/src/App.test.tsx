@@ -2,6 +2,8 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 
+const AUTH_TOKEN_STORAGE_KEY = "think-all-in-one.auth-token";
+
 const mockedAssistantState = {
   chat: {
     messages: [
@@ -115,6 +117,11 @@ const mockedControlPlane = {
 };
 
 vi.mock("./lib/agent", () => ({
+  AUTH_TOKEN_STORAGE_KEY: "think-all-in-one.auth-token",
+  REQUIRED_AUTH_TOKEN: "1234567809",
+  loginWithToken: vi.fn(async () => ({ ok: true })),
+  setStoredAuthToken: vi.fn((token: string) => window.localStorage.setItem("think-all-in-one.auth-token", token)),
+  clearStoredAuthToken: vi.fn(() => window.localStorage.removeItem("think-all-in-one.auth-token")),
   useAssistantUiState: () => mockedAssistantState,
   useControlPlaneState: () => mockedControlPlane,
   resolveAgentHost: () => "http://localhost:8787"
@@ -145,10 +152,25 @@ import App from "./App";
 describe("App", () => {
   beforeEach(() => {
     window.location.hash = "#console";
+    window.localStorage.clear();
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    })));
   });
 
-  it("renders assistant surfaces", () => {
+  it("renders login screen when auth token is missing", () => {
+    render(<App />);
+
+    expect(screen.getByText("登录到 Think 工作台")).toBeInTheDocument();
+    expect(screen.getByLabelText("访问令牌")).toBeInTheDocument();
+    expect(screen.queryByText("主助手工作台")).not.toBeInTheDocument();
+  });
+
+  it("renders assistant surfaces when auth token already exists", () => {
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, "1234567809");
+
     render(<App />);
 
     expect(screen.getByText("主助手工作台")).toBeInTheDocument();
@@ -161,7 +183,23 @@ describe("App", () => {
     expect(screen.getAllByText("Main chat").length + screen.queryAllByText("主聊天").length).toBeGreaterThan(0);
   });
 
+  it("stores token after a successful login", async () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText("访问令牌"), {
+      target: { value: "1234567809" }
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("登录"));
+    });
+
+    expect(window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBe("1234567809");
+    expect(screen.getByText("主助手工作台")).toBeInTheDocument();
+  });
+
   it("submits a chat message via the shell", async () => {
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, "1234567809");
     render(<App />);
 
     fireEvent.change(screen.getByLabelText("消息输入框"), {
@@ -176,6 +214,7 @@ describe("App", () => {
   });
 
   it("creates a new durable chat session from the sidebar", async () => {
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, "1234567809");
     render(<App />);
 
     await act(async () => {
@@ -193,6 +232,7 @@ describe("App", () => {
 
   it("renders the feature lab when hash navigation targets it", () => {
     window.location.hash = "#lab/session";
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, "1234567809");
 
     render(<App />);
 
