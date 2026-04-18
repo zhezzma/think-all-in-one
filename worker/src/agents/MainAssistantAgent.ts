@@ -380,7 +380,11 @@ export class MainAssistantAgent extends Think<Env, AssistantConfig> {
 
   @callable()
   async clearSessionHistory(): Promise<{ requestId: string; status: "completed" | "skipped" }> {
-    return this.saveMessages(() => []);
+    this.clearMessages();
+    return {
+      requestId: crypto.randomUUID(),
+      status: "completed"
+    };
   }
 
   @callable()

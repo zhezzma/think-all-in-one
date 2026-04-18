@@ -392,21 +392,16 @@ describe("MainAssistantAgent integration helpers", () => {
     expect(await agent.listAgentProfiles()).toEqual([]);
   });
 
-  it("updates enabled tools/extensions and clears session history through persisted messages", async () => {
+  it("updates enabled tools/extensions and clears session history through clearMessages", async () => {
     let storedConfig = {};
-    const saveMessages = vi.fn(async (updater: (messages: UIMessage[]) => UIMessage[]) => {
-      expect(updater([
-        { id: "msg-1", role: "user", parts: [{ type: "text", text: "hello" }] }
-      ])).toEqual([]);
-      return { requestId: "req-clear", status: "completed" as const };
-    });
+    const clearMessages = vi.fn();
     const fakeAgent = {
       getConfig: vi.fn(() => storedConfig),
       configure: vi.fn((next) => {
         storedConfig = next;
       }),
       session: { refreshSystemPrompt: vi.fn(async () => "prompt") },
-      saveMessages,
+      clearMessages,
       getAssistantConfig: vi.fn(() => MainAssistantAgent.prototype.getAssistantConfig.call(fakeAgent)),
       updateAssistantConfig: vi.fn((update: Record<string, unknown>) =>
         MainAssistantAgent.prototype.updateAssistantConfig.call(fakeAgent, update)
@@ -417,9 +412,10 @@ describe("MainAssistantAgent integration helpers", () => {
       .resolves.toMatchObject({ enabledTools: ["notes"] });
     await expect(MainAssistantAgent.prototype.updateEnabledExtensions.call(fakeAgent, ["example-extension"]))
       .resolves.toMatchObject({ enabledExtensions: ["example-extension"], enabledTools: ["notes"] });
-    await expect(MainAssistantAgent.prototype.clearSessionHistory.call(fakeAgent))
-      .resolves.toEqual({ requestId: "req-clear", status: "completed" });
-    expect(saveMessages).toHaveBeenCalledTimes(1);
+    const clearResult = await MainAssistantAgent.prototype.clearSessionHistory.call(fakeAgent);
+    expect(clearResult.status).toBe("completed");
+    expect(typeof clearResult.requestId).toBe("string");
+    expect(clearMessages).toHaveBeenCalledTimes(1);
   });
 
   it("saves synthetic messages via saveMessages callback", async () => {
