@@ -2,8 +2,14 @@ import type { AssistantConfigDraft } from "../lib/agent";
 
 const MODEL_OPTIONS = [
   { value: "@cf/meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct" },
+  { value: "@cf/meta/llama-3.1-8b-instruct-fast", label: "Llama 3.1 8B Fast" },
+  { value: "@cf/meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B Instruct" },
   { value: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", label: "Llama 3.3 70B Fast" },
-  { value: "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b", label: "DeepSeek R1 Distill Qwen 32B" }
+  { value: "@cf/meta/llama-4-scout-17b-16e-instruct", label: "Llama 4 Scout 17B" },
+  { value: "@cf/qwen/qwen1.5-7b-chat-awq", label: "Qwen 1.5 7B Chat AWQ" },
+  { value: "@cf/qwen/qwen3-30b-a3b-fp8", label: "Qwen 3 30B A3B FP8" },
+  { value: "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b", label: "DeepSeek R1 Distill Qwen 32B" },
+  { value: "@cf/mistral/mistral-7b-instruct-v0.2-lora", label: "Mistral 7B Instruct v0.2 LoRA" }
 ] as const;
 
 type ConfigPanelProps = {
@@ -27,7 +33,7 @@ export function ConfigPanel({ config, onChange, onApply }: ConfigPanelProps) {
         >
           {MODEL_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {option.label}（{option.value}）
             </option>
           ))}
         </select>
