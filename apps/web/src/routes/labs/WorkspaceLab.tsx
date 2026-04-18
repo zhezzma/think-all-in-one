@@ -16,9 +16,9 @@ export function WorkspaceLab({ projectName, agentHost, route }: WorkspaceLabProp
 
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Workspace lab</h2>
+      <h2 style={titleStyle}>工作区实验室</h2>
       <p style={copyStyle}>
-        Lightweight workspace metadata for this web client and its current browser context.
+        这里展示当前 Web 客户端和浏览器上下文对应的轻量工作区元数据。
       </p>
       <pre style={preStyle}>
         {JSON.stringify(

@@ -17,9 +17,9 @@ const mcpSurface = {
 export function McpLab() {
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>MCP lab</h2>
+      <h2 style={titleStyle}>MCP 实验室</h2>
       <p style={copyStyle}>
-        Current MCP support is inspectable surface state only, which makes the prototype easy to reason about in the UI.
+        当前 MCP 仍然是可观察的表面状态展示，还没有接入真正的在线传输层；这样更便于在 UI 里理解原型行为。
       </p>
       <pre style={preStyle}>{JSON.stringify(mcpSurface, null, 2)}</pre>
     </section>

@@ -12,15 +12,14 @@ export function ExtensionsLab({ extensionCatalog, onUpdateEnabledExtensions }: E
 
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Extensions lab</h2>
+      <h2 style={titleStyle}>扩展实验室</h2>
       <p style={copyStyle}>
-        Inspect the live extension catalog and enable or disable available extensions through the
-        persisted assistant config.
+        这里展示在线扩展目录，并可通过持久化助手配置启用或禁用可用扩展。
       </p>
 
       <div style={summaryRowStyle}>
-        <span style={badgeStyle}>available: {extensionCatalog.count}</span>
-        <span style={badgeStyle}>enabled: {enabledIds.length}</span>
+        <span style={badgeStyle}>可用：{extensionCatalog.count}</span>
+        <span style={badgeStyle}>已启用：{enabledIds.length}</span>
       </div>
 
       <ul style={listStyle}>
@@ -38,10 +37,10 @@ export function ExtensionsLab({ extensionCatalog, onUpdateEnabledExtensions }: E
               </div>
               <div style={rightColumnStyle}>
                 <span style={extension.enabled ? enabledTextStyle : disabledTextStyle}>
-                  {extension.enabled ? "Enabled" : "Disabled"}
+                  {extension.enabled ? "已启用" : "已禁用"}
                 </span>
                 <input
-                  aria-label={`Toggle extension ${extension.id}`}
+                  aria-label={`切换扩展 ${extension.id}`}
                   type="checkbox"
                   checked={extension.enabled}
                   onChange={() => {

@@ -11,13 +11,13 @@ export function ClientToolsLab({ tools, onRunTool, onRunAll }: ClientToolsLabPro
     <section style={panelStyle}>
       <div style={headerStyle}>
         <div>
-          <h2 style={titleStyle}>Client tools lab</h2>
+          <h2 style={titleStyle}>客户端工具实验室</h2>
           <p style={copyStyle}>
-            Browser-side tools are registered at boot, marked ready, then executed to capture an inspectable snapshot.
+            浏览器侧工具会在启动时注册、进入就绪状态，并执行一次，留下可检查的结果快照。
           </p>
         </div>
         <button type="button" style={buttonStyle} onClick={onRunAll}>
-          Re-run all tools
+          重新运行全部工具
         </button>
       </div>
 
@@ -30,14 +30,14 @@ export function ClientToolsLab({ tools, onRunTool, onRunAll }: ClientToolsLabPro
                 <p style={cardCopyStyle}>{tool.description}</p>
               </div>
               <button type="button" style={secondaryButtonStyle} onClick={() => onRunTool(tool.id)}>
-                Run tool
+                运行工具
               </button>
             </div>
 
             <div style={metaRowStyle}>
               <span style={badgeStyle}>{tool.lifecycle}</span>
               <span style={badgeStyle}>{tool.category}</span>
-              <span style={badgeStyle}>runs: {tool.runCount}</span>
+              <span style={badgeStyle}>运行次数：{tool.runCount}</span>
             </div>
 
             <pre style={preStyle}>

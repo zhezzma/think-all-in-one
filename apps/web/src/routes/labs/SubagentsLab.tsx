@@ -1,27 +1,27 @@
 const subagents = [
   {
     id: "ResearchSubAgent",
-    role: "Research specialist",
-    focus: "Collect facts, clarify unknowns, and return concise findings."
+    role: "研究专员",
+    focus: "负责收集事实、澄清未知信息，并返回简洁结论。"
   },
   {
     id: "MemorySubAgent",
-    role: "Memory specialist",
-    focus: "Capture durable facts, preferences, and reusable summaries."
+    role: "记忆专员",
+    focus: "负责整理持久事实、偏好和可复用摘要。"
   },
   {
     id: "OpsSubAgent",
-    role: "Operations specialist",
-    focus: "Support runbooks, execution plans, and incident-style reasoning."
+    role: "运维专员",
+    focus: "负责运行手册、执行计划和偏事故处置式推理。"
   }
 ];
 
 export function SubagentsLab() {
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Sub-agents lab</h2>
+      <h2 style={titleStyle}>子代理实验室</h2>
       <p style={copyStyle}>
-        Inspect the currently scaffolded specialist agents exposed by the worker package.
+        这里展示当前 worker 暴露出来的专用子代理，以及它们各自的职责分工。
       </p>
       <ul style={listStyle}>
         {subagents.map((agent) => (

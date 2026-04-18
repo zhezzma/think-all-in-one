@@ -92,10 +92,10 @@ describe("FeatureLab", () => {
       />
     );
 
-    expect(screen.getByText("Tools lab")).toBeInTheDocument();
+    expect(screen.getByText("工具实验室")).toBeInTheDocument();
     expect(screen.getByText("Diagnostics tool")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: "Toggle tool notes" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "切换工具 notes" }));
     expect(onUpdateEnabledTools).toHaveBeenCalledWith(["diagnostics", "notes"]);
 
     fireEvent.click(screen.getByRole("button", { name: "会话" }));

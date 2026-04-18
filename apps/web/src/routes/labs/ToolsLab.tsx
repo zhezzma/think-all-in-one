@@ -12,15 +12,14 @@ export function ToolsLab({ toolCatalog, onUpdateEnabledTools }: ToolsLabProps) {
 
   return (
     <section style={panelStyle}>
-      <h2 style={titleStyle}>Tools lab</h2>
+      <h2 style={titleStyle}>工具实验室</h2>
       <p style={copyStyle}>
-        Manage the live server tool catalog exposed by MainAssistantAgent. Toggle individual tools
-        and persist the enabled set through backend callables.
+        这里管理 MainAssistantAgent 当前暴露出来的在线服务端工具目录。你可以切换单个工具，并通过后端 callable 持久化启用集合。
       </p>
 
       <div style={summaryRowStyle}>
-        <span style={badgeStyle}>catalog: {toolCatalog.count}</span>
-        <span style={badgeStyle}>enabled: {toolCatalog.enabledCount}</span>
+        <span style={badgeStyle}>目录数量：{toolCatalog.count}</span>
+        <span style={badgeStyle}>已启用：{toolCatalog.enabledCount}</span>
       </div>
 
       <ul style={listStyle}>
@@ -37,10 +36,10 @@ export function ToolsLab({ toolCatalog, onUpdateEnabledTools }: ToolsLabProps) {
               </div>
               <label style={toggleRowStyle}>
                 <span style={tool.enabled ? enabledTextStyle : disabledTextStyle}>
-                  {tool.enabled ? "Enabled" : "Disabled"}
+                  {tool.enabled ? "已启用" : "已禁用"}
                 </span>
                 <input
-                  aria-label={`Toggle tool ${tool.id}`}
+                  aria-label={`切换工具 ${tool.id}`}
                   type="checkbox"
                   checked={tool.enabled}
                   onChange={() => {
