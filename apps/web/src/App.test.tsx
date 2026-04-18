@@ -165,6 +165,7 @@ describe("App", () => {
 
     expect(screen.getByText("登录到 Think 工作台")).toBeInTheDocument();
     expect(screen.getByLabelText("访问令牌")).toBeInTheDocument();
+    expect(screen.getByLabelText("访问令牌")).toHaveValue("");
     expect(screen.queryByText("主助手工作台")).not.toBeInTheDocument();
   });
 
@@ -179,6 +180,8 @@ describe("App", () => {
     expect(screen.getByText("审批列表")).toBeInTheDocument();
     expect(screen.getByText("助手配置")).toBeInTheDocument();
     expect(screen.getByText("事件日志")).toBeInTheDocument();
+    expect(screen.getByText("已登录")).toBeInTheDocument();
+    expect(screen.queryByText("1234567809")).not.toBeInTheDocument();
     expect(screen.getByText("Hello from the main agent.")).toBeInTheDocument();
     expect(screen.getAllByText("Main chat").length + screen.queryAllByText("主聊天").length).toBeGreaterThan(0);
   });

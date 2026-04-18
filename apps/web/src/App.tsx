@@ -8,7 +8,6 @@ import {
   AUTH_TOKEN_STORAGE_KEY,
   clearStoredAuthToken,
   loginWithToken,
-  REQUIRED_AUTH_TOKEN,
   resolveAgentHost,
   setStoredAuthToken,
   useAssistantUiState,
@@ -231,8 +230,8 @@ function AuthenticatedApp({ authToken, onLogout }: { authToken: string; onLogout
           </div>
 
           <div style={authInfoStyle}>
-            <div style={authMetaLabelStyle}>当前令牌</div>
-            <code style={authTokenPreviewStyle}>{authToken}</code>
+            <div style={authMetaLabelStyle}>当前状态</div>
+            <div style={authStatusTextStyle}>已登录</div>
             <button type="button" style={logoutButtonStyle} onClick={onLogout}>
               退出登录
             </button>
@@ -278,7 +277,7 @@ function AuthenticatedApp({ authToken, onLogout }: { authToken: string; onLogout
 }
 
 function LoginScreen({ onLogin }: { onLogin: (token: string) => void }) {
-  const [token, setToken] = useState(REQUIRED_AUTH_TOKEN);
+  const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -545,7 +544,7 @@ function getLabFromHash(): FeatureLabRoute {
 
 function readStoredAuthToken() {
   if (typeof window === "undefined") {
-    return REQUIRED_AUTH_TOKEN;
+    return "";
   }
 
   return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) ?? "";
@@ -638,7 +637,7 @@ const sidebarCopyStyle = { margin: "4px 0 0", color: "#57606a", fontSize: 13 } a
 const newChatButtonStyle = { border: "none", borderRadius: 999, padding: "8px 12px", background: "#1f6feb", color: "#fff", cursor: "pointer", whiteSpace: "nowrap" } as const;
 const authInfoStyle = { display: "grid", gap: 8, padding: 12, background: "#f8fafc", border: "1px solid #d0d7de", borderRadius: 10 } as const;
 const authMetaLabelStyle = { color: "#57606a", fontSize: 12 } as const;
-const authTokenPreviewStyle = { background: "#fff", border: "1px solid #d0d7de", borderRadius: 8, padding: 8, fontSize: 12 } as const;
+const authStatusTextStyle = { fontSize: 14, fontWeight: 600 } as const;
 const logoutButtonStyle = { border: "1px solid #d0d7de", background: "#fff", borderRadius: 999, padding: "8px 12px", cursor: "pointer" } as const;
 const sessionListStyle = { display: "grid", gap: 8 } as const;
 const sessionButtonStyle = { textAlign: "left", border: "1px solid #d0d7de", background: "#f8fafc", borderRadius: 10, padding: 12, cursor: "pointer", display: "grid", gap: 4 } as const;
